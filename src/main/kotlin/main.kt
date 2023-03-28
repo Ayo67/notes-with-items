@@ -18,13 +18,13 @@ fun runMenu() {
             3 -> updateNote()
             4 -> deleteNote()
             5 -> archiveNote()
-            //6 -> addItemToNote()
-            //7 -> updateItemContentsInNote()
-            //8 -> deleteAnItem()
-            //9 -> markItemStatus()
+            6 -> addItemToNote()
+            7 -> updateItemContentsInNote()
+            8 -> deleteAnItem()
+            9 -> markItemStatus()
             10 -> searchNotes()
-            //15 -> searchItems()
-            //16 -> listToDoItems()
+            15 -> searchItems()
+            16 -> listToDoItems()
             0 -> exitApp()
             else -> println("Invalid menu choice: $option")
         }
@@ -162,11 +162,75 @@ fun archiveNote() {
     }
 }
 
+
+
 //-------------------------------------------
 //ITEM MENU (only available for active notes)
 //-------------------------------------------
+private fun addItemToNote(){
+    val note: Note? = askUserToChooseActiveNote()
+    if (note != null){
+        if(note.addItem(Item(itemContents = readNextLine("\t Item Contents: "))))
+            println("Add Successful!")
+        else println("add Not Successful")
+    }
+}
 
-//TODO
+fun updateItemContentsInNote() {
+    val note: Note? = askUserToChooseActiveNote()
+    if (note != null) {
+        val item: Item? = askUserToChooseItem(note)
+        if (item != null) {
+            val newContents = readNextLine("Enter new contents: ")
+            if (note.update(item.itemId, Item(itemContents = newContents))) {
+                println("Item contents updated")
+            } else {
+                println("Item contents NOT updated")
+            }
+        } else {
+            println("Invalid Item Id")
+        }
+    }
+}
+
+fun deleteAnItem() {
+    val note: Note? = askUserToChooseActiveNote()
+    if (note != null) {
+        val item: Item? = askUserToChooseItem(note)
+        if (item != null) {
+            val isDeleted = note.delete(item.itemId)
+            if (isDeleted) {
+                println("Delete Successful!")
+            } else {
+                println("Delete NOT Successful")
+            }
+        }
+    }
+}
+
+fun markItemStatus() {
+    val note: Note? = askUserToChooseActiveNote()
+    if (note != null) {
+        val item: Item? = askUserToChooseItem(note)
+        if (item != null) {
+            var changeStatus = 'X'
+            if (item.isItemComplete) {
+                changeStatus = readNextChar("The item is currently complete...do you want to mark it as TODO?")
+                if ((changeStatus == 'Y') ||  (changeStatus == 'y'))
+                    item.isItemComplete = false
+            }
+            else {
+                changeStatus = readNextChar("The item is currently TODO...do you want to mark it as Complete?")
+                if ((changeStatus == 'Y') ||  (changeStatus == 'y'))
+                    item.isItemComplete = true
+            }
+        }
+    }
+}
+
+
+
+
 
 //------------------------------------
 //NOTE REPORTS MENU
@@ -181,11 +245,28 @@ fun searchNotes() {
     }
 }
 
+fun listToDoItems(){
+    if (noteAPI.numberOfToDoItems() > 0) {
+        println("Total TODO items: ${noteAPI.numberOfToDoItems()}")
+    }
+    println(noteAPI.listTodoItems())
+}
+
+
 //------------------------------------
 //ITEM REPORTS MENU
 //------------------------------------
+fun searchItems() {
+    val searchContents = readNextLine("Enter the item contents to search by: ")
+    val searchResults = noteAPI.searchItemByContents(searchContents)
+    if (searchResults.isEmpty()) {
+        println("No items found")
+    } else {
+        println(searchResults)
+    }
+}
 
-//TODO
+
 
 //------------------------------------
 // Exit App
@@ -215,3 +296,14 @@ private fun askUserToChooseActiveNote(): Note? {
     }
     return null //selected note is not active
 }
+private fun askUserToChooseItem(note: Note): Item? {
+    if (note.numberOfItems() > 0) {
+        print(note.listItems())
+        return note.findOne(readNextInt("\nEnter the id of the item: "))
+    }
+    else{
+        println ("No items for chosen note")
+        return null
+    }
+}
+
